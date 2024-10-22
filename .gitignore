@@ -1,0 +1,24 @@
+# Python
+*.pyc
+__pycache__/
+
+# Environments
+.env
+venv/
+ENV/
+env/
+
+# Node.js (dla zależności frontendu)
+node_modules/
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Debugging
+debug.log
+
+# FastAPI-specific
+*.log
