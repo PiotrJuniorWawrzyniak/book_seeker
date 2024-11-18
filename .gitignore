@@ -22,3 +22,5 @@ debug.log
 
 # FastAPI-specific
 *.log
+
+database.db

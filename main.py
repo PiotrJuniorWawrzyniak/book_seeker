@@ -1,6 +1,8 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from starlette.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 import requests
+from models import Book, SessionLocal
 
 app = FastAPI()
 
@@ -13,7 +15,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Endpoint do pobierania książek po autorze
+# Funkcja tworząca sesję z bazą danych
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# Endpoint do pobierania książek z Open Library API
 @app.get("/get_books_by_author/")
 def get_books_by_author(author: str):
     url = f"https://openlibrary.org/search.json?author={author}"
@@ -23,9 +33,34 @@ def get_books_by_author(author: str):
         raise HTTPException(status_code=500, detail="Failed to connect to Open Library API")
 
     data = response.json()
-    books = [{"title": doc.get("title")} for doc in data.get("docs", []) if doc.get("title")]
+    books = [{"title": doc.get("title"), "author": author} for doc in data.get("docs", []) if doc.get("title")]
 
     if not books:
         raise HTTPException(status_code=404, detail="No books found for the given author")
 
     return {"books": books}
+
+# Endpoint do zapisywania książki do bazy danych
+@app.post("/save_book/")
+def save_book(title: str, author: str, db: Session = Depends(get_db)):
+    new_book = Book(title=title, author=author)
+    db.add(new_book)
+    db.commit()
+    db.refresh(new_book)
+    return {"message": "Book saved successfully", "book": {"title": title, "author": author}}
+
+# Endpoint do pobierania zapisanych książek z bazy danych
+@app.get("/get_saved_books/")
+def get_saved_books(db: Session = Depends(get_db)):
+    books = db.query(Book).all()
+    return {"books": [{"id": book.id, "title": book.title, "author": book.author} for book in books]}
+
+# Endpoint do usuwania książki z bazy danych
+@app.delete("/delete_book/")
+def delete_book(book_id: int, db: Session = Depends(get_db)):
+    book = db.query(Book).filter(Book.id == book_id).first()
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    db.delete(book)
+    db.commit()
+    return {"message": "Book deleted successfully"}
