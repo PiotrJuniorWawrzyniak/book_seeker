@@ -7,10 +7,23 @@
       placeholder="Wpisz nazwisko autora"
     />
     <button @click="fetchBooks">Szukaj</button>
+
     <ul v-if="books.length">
-      <li v-for="book in books" :key="book.title">{{ book.title }}</li>
+      <li v-for="book in books" :key="book.title">
+        {{ book.title }}
+        <button @click="saveBook(book.title, author)">Zapisz książkę</button>
+      </li>
     </ul>
     <p v-else>Brak wyników</p>
+
+    <h3>Zapisane książki:</h3>
+    <ul v-if="savedBooks.length">
+      <li v-for="book in savedBooks" :key="book.id">
+        {{ book.title }} ({{ book.author }})
+        <button @click="deleteBook(book.id)">Usuń książkę</button>
+      </li>
+    </ul>
+    <p v-else>Brak zapisanych książek</p>
   </div>
 </template>
 
@@ -22,6 +35,7 @@ export default {
     return {
       author: "",
       books: [],
+      savedBooks: [],
     };
   },
   methods: {
@@ -38,6 +52,45 @@ export default {
         this.books = [];
       }
     },
+    async saveBook(title, author) {
+      try {
+        const payload = {
+          title: title || "",
+          author: author || "",
+        };
+        console.log("Wysyłam dane:", payload);
+        await axios.post("http://127.0.0.1:8000/save_book/", payload, {
+            headers: {
+              "Content-Type": "application/json",
+            },
+        });
+        alert(`Książka "${title}" została zapisana!`);
+        this.fetchSavedBooks();
+      } catch (error) {
+        console.error("Błąd podczas zapisywania książki:", error);
+      }
+    },
+    async fetchSavedBooks() {
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/get_saved_books/");
+        this.savedBooks = response.data.books;
+      } catch (error) {
+        console.error("Błąd podczas pobierania zapisanych książek:", error);
+        this.savedBooks = [];
+      }
+    },
+    async deleteBook(id) {
+      try {
+        await axios.delete(`http://127.0.0.1:8000/delete_book/?book_id=${id}`);
+        alert("Książka została usunięta!");
+        this.fetchSavedBooks();
+      } catch (error) {
+        console.error("Błąd podczas usuwania książki:", error);
+      }
+    },
+  },
+  mounted() {
+    this.fetchSavedBooks();
   },
 };
 </script>
@@ -57,6 +110,7 @@ input {
 
 button {
   padding: 10px;
+  margin: 5px;
   cursor: pointer;
 }
 

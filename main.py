@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends
 from starlette.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 import requests
 from models import Book, SessionLocal
 
@@ -14,6 +15,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Model danych Pydantic
+class BookSchema(BaseModel):
+    title: str
+    author: str
 
 # Funkcja tworząca sesję z bazą danych
 def get_db():
@@ -42,12 +48,12 @@ def get_books_by_author(author: str):
 
 # Endpoint do zapisywania książki do bazy danych
 @app.post("/save_book/")
-def save_book(title: str, author: str, db: Session = Depends(get_db)):
-    new_book = Book(title=title, author=author)
+def save_book(book: BookSchema, db: Session = Depends(get_db)):
+    new_book = Book(title=book.title, author=book.author)
     db.add(new_book)
     db.commit()
     db.refresh(new_book)
-    return {"message": "Book saved successfully", "book": {"title": title, "author": author}}
+    return {"message": "Book saved successfully", "book": {"title": book.title, "author": book.author}}
 
 # Endpoint do pobierania zapisanych książek z bazy danych
 @app.get("/get_saved_books/")
