@@ -13,6 +13,7 @@ Base = declarative_base()
 # Sesja dla operacji z bazą danych
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+
 # Model danych dla tabeli 'books'
 class Book(Base):
     __tablename__ = "books"
@@ -20,6 +21,7 @@ class Book(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
     author = Column(String, index=True)
+
 
 # Utwórz tabelę w bazie danych
 Base.metadata.create_all(bind=engine)
