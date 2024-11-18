@@ -7,6 +7,7 @@
       placeholder="Wpisz nazwisko autora"
     />
     <button @click="fetchBooks">Szukaj</button>
+    <button @click="clearSearch">Wyczyść</button> <!-- Nowy przycisk "Wyczyść" -->
 
     <ul v-if="books.length">
       <li v-for="book in books" :key="book.title">
@@ -39,6 +40,7 @@ export default {
     };
   },
   methods: {
+    // Metoda do pobierania książek na podstawie autora
     async fetchBooks() {
       try {
         const response = await axios.get(
@@ -52,6 +54,8 @@ export default {
         this.books = [];
       }
     },
+
+    // Metoda do zapisywania książek
     async saveBook(title, author) {
       try {
         const payload = {
@@ -60,9 +64,9 @@ export default {
         };
         console.log("Wysyłam dane:", payload);
         await axios.post("http://127.0.0.1:8000/save_book/", payload, {
-            headers: {
-              "Content-Type": "application/json",
-            },
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
         alert(`Książka "${title}" została zapisana!`);
         this.fetchSavedBooks();
@@ -70,6 +74,8 @@ export default {
         console.error("Błąd podczas zapisywania książki:", error);
       }
     },
+
+    // Metoda do pobierania zapisanych książek
     async fetchSavedBooks() {
       try {
         const response = await axios.get("http://127.0.0.1:8000/get_saved_books/");
@@ -79,6 +85,8 @@ export default {
         this.savedBooks = [];
       }
     },
+
+    // Metoda do usuwania książek
     async deleteBook(id) {
       try {
         await axios.delete(`http://127.0.0.1:8000/delete_book/?book_id=${id}`);
@@ -88,9 +96,15 @@ export default {
         console.error("Błąd podczas usuwania książki:", error);
       }
     },
+
+    // Metoda do czyszczenia formularza wyszukiwania i listy książek
+    clearSearch() {
+      this.author = "";  // Wyczyść pole autora
+      this.books = [];   // Wyczyść listę książek
+    },
   },
   mounted() {
-    this.fetchSavedBooks();
+    this.fetchSavedBooks();  // Załaduj zapisane książki przy starcie aplikacji
   },
 };
 </script>
