@@ -5,9 +5,10 @@
       type="text"
       v-model="author"
       placeholder="Wpisz nazwisko autora"
+      @keyup.enter="fetchBooks"
     />
     <button @click="fetchBooks">Szukaj</button>
-    <button @click="clearSearch">Wyczyść</button> <!-- Nowy przycisk "Wyczyść" -->
+    <button @click="clearSearch">Wyczyść</button>
 
     <ul v-if="books.length">
       <li v-for="book in books" :key="book.title">
@@ -21,7 +22,7 @@
     <ul v-if="savedBooks.length">
       <li v-for="book in savedBooks" :key="book.id">
         {{ book.title }} ({{ book.author }})
-        <button @click="deleteBook(book.id)">Usuń książkę</button>
+        <button @click="deleteBook(book.id, book.title)">Usuń książkę</button>
       </li>
     </ul>
     <p v-else>Brak zapisanych książek</p>
@@ -40,7 +41,6 @@ export default {
     };
   },
   methods: {
-    // Metoda do pobierania książek na podstawie autora
     async fetchBooks() {
       try {
         const response = await axios.get(
@@ -49,13 +49,19 @@ export default {
           )}`
         );
         this.books = response.data.books;
+
+        if (this.books.length === 0) {
+          alert("Brak wyników!");
+        }
       } catch (error) {
-        console.error("Błąd podczas pobierania książek:", error);
+        if (error.response && error.response.status === 404) {
+          alert("Brak wyników!"); // Obsługa błędu 404
+        } else {
+          console.error("Błąd podczas pobierania książek:", error);
+        }
         this.books = [];
       }
     },
-
-    // Metoda do zapisywania książek
     async saveBook(title, author) {
       try {
         const payload = {
@@ -74,37 +80,35 @@ export default {
         console.error("Błąd podczas zapisywania książki:", error);
       }
     },
-
-    // Metoda do pobierania zapisanych książek
     async fetchSavedBooks() {
       try {
-        const response = await axios.get("http://127.0.0.1:8000/get_saved_books/");
+        const response = await axios.get(
+          "http://127.0.0.1:8000/get_saved_books/"
+        );
         this.savedBooks = response.data.books;
       } catch (error) {
         console.error("Błąd podczas pobierania zapisanych książek:", error);
         this.savedBooks = [];
       }
     },
-
-    // Metoda do usuwania książek
-    async deleteBook(id) {
+    async deleteBook(id, title) {
       try {
-        await axios.delete(`http://127.0.0.1:8000/delete_book/?book_id=${id}`);
-        alert("Książka została usunięta!");
+        await axios.delete(
+          `http://127.0.0.1:8000/delete_book/?book_id=${id}`
+        );
+        alert(`Książka "${title}" została usunięta!`);
         this.fetchSavedBooks();
       } catch (error) {
         console.error("Błąd podczas usuwania książki:", error);
       }
     },
-
-    // Metoda do czyszczenia formularza wyszukiwania i listy książek
     clearSearch() {
-      this.author = "";  // Wyczyść pole autora
-      this.books = [];   // Wyczyść listę książek
+      this.author = "";
+      this.books = [];
     },
   },
   mounted() {
-    this.fetchSavedBooks();  // Załaduj zapisane książki przy starcie aplikacji
+    this.fetchSavedBooks();
   },
 };
 </script>
