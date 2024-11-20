@@ -67,6 +67,11 @@ This project is built using **FastAPI** (for the backend) and **Vue.js** (for th
 4. **Clear the search and book list:**
    - Click the "Wyczyść" (Clear) button to reset the search results and the author's name input, while keeping the saved books list intact.
 
+5. **Switch between languages:**  
+   - You can toggle between Polish and English interfaces using the **PL** and **EN** buttons at the bottom of the page.  
+   - All interface elements, including buttons, placeholders, and messages, will update dynamically to the selected language.
+
+
 ## Author
 
 - Piotr Wawrzyniak - [piotrjuniorwawrzyniak@gmail.com](mailto:piotrjuniorwawrzyniak@gmail.com)
